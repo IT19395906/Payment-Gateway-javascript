@@ -19,7 +19,7 @@
         </div>
         <div class="container mt-5 mb-5">
             <div class="logo">
-                <img src="./logo.jpg" alt="Logo">
+                <img src="./logo.jpeg" alt="Logo">
             </div>
             <h2>Payment Gateway</h2>
             <br/>
@@ -79,93 +79,105 @@
         </div>
 
         <script>
-            $(document).ready(function () {
-                // Fetch policy outstanding amount when policy number changes
-                $('#policyNo').on('blur', function () {
-                    const policyNo = $(this).val();
-                    if (policyNo) {
-                        $.ajax({
-                            url: '/api/policy/outstanding', // Replace with your actual API endpoint
-                            method: 'GET',
-                            data: { policyNo: policyNo },
-                            success: function (response) {
-                                $('#policyOutstanding').text('Outstanding Amount: ' + response.outstandingAmount);
-                            },
-                            error: function () {
-                                $('#policyOutstanding').text('Error fetching policy outstanding amount');
-                            }
-                        });
-                    }
-                });
-
-
-                // Form validation logic
-                $('#paymentGatewayForm').on('submit', function (event) {
-                    event.preventDefault();
-                    let isValid = true;
-
-                    // Validate address
-                    const address = $('#address').val();
-                    if (address.length < 10) {
-                        isValid = false;
-                        $('#address').addClass('is-invalid');
-                    } else {
-                        $('#address').removeClass('is-invalid');
-                    }
-
-                    // Validate email
-                    const email = $('#email').val();
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(email)) {
-                        isValid = false;
-                        $('#email').addClass('is-invalid');
-                    } else {
-                        $('#email').removeClass('is-invalid');
-                    }
-
-                    // Validate contact number
-                    const contactNo = $('#contactNo').val();
-                    const contactNoRegex = /^\d{10}$/;
-                    if (!contactNoRegex.test(contactNo)) {
-                        isValid = false;
-                        $('#contactNo').addClass('is-invalid');
-                    } else {
-                        $('#contactNo').removeClass('is-invalid');
-                    }
-
-                    // Validate payment amount
-                    const paymentAmount = parseFloat($('#paymentAmount').val());
-                    if (isNaN(paymentAmount) || paymentAmount <= 0) {
-                        isValid = false;
-                        $('#paymentAmount').addClass('is-invalid');
-                    } else {
-                        $('#paymentAmount').removeClass('is-invalid');
-                    }
-
-                    // Perform validation (if needed)
-                    if (isValid) {
-                        // Gather form data
-                        const formData = $(this).serialize();
-
-                        // Send form data to the backend via POST
-                        $.ajax({
-                            url: '/api/customer', // Replace with your actual API endpoint
-                            method: 'POST',
-                            data: formData,
-                            success: function (response) {
-                                alert('Form submitted successfully!');
-                                $('#paymentGatewayForm')[0].reset();
-                                $('#policyOutstanding').text('');
-                                $('.is-invalid').removeClass('is-invalid');
-                            },
-                            error: function () {
-                                alert('Error submitting form');
-                            }
-                        });
-                    }
-                });
+            document.addEventListener('DOMContentLoaded', function () {
+              const paymentGatewayForm = document.getElementById('paymentGatewayForm');
+              const policyNoInput = document.getElementById('policyNo');
+              const policyOutstanding = document.getElementById('policyOutstanding');
+              const addressInput = document.getElementById('address');
+              const emailInput = document.getElementById('email');
+              const contactNoInput = document.getElementById('contactNo');
+              const firstNameInput = document.getElementById('firstName');
+              const lastNameInput = document.getElementById('lastName');
+              const nicInput = document.getElementById('nic');
+              const paymentAmountInput = document.getElementById('paymentAmount');
+        
+              // Fetch policy outstanding amount when policy number changes
+              policyNoInput.addEventListener('blur', function () {
+                const policyNo = policyNoInput.value;
+                if (policyNo) {
+                  fetch(`/api/policy/outstanding?policyNo=${policyNo}`)
+                    .then(response => response.json())
+                    .then(data => {
+                      policyOutstanding.textContent = `Outstanding Amount: ${data.outstandingAmount}`;
+                    })
+                    .catch(() => {
+                      policyOutstanding.textContent = 'Error fetching policy outstanding amount';
+                    });
+                }
+              });
+        
+              // Form validation logic
+              paymentGatewayForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                let isValid = true;
+        
+                // Validate address
+                const address = addressInput.value;
+                if (address.length < 10) {
+                  isValid = false;
+                  addressInput.classList.add('is-invalid');
+                } else {
+                  addressInput.classList.remove('is-invalid');
+                }
+        
+                // Validate email
+                const email = emailInput.value;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                  isValid = false;
+                  emailInput.classList.add('is-invalid');
+                } else {
+                  emailInput.classList.remove('is-invalid');
+                }
+        
+                // Validate contact number
+                const contactNo = contactNoInput.value;
+                const contactNoRegex = /^\d{10}$/;
+                if (!contactNoRegex.test(contactNo)) {
+                  isValid = false;
+                  contactNoInput.classList.add('is-invalid');
+                } else {
+                  contactNoInput.classList.remove('is-invalid');
+                }
+        
+                // Validate payment amount
+                const paymentAmount = parseFloat(paymentAmountInput.value);
+                if (isNaN(paymentAmount) || paymentAmount <= 0) {
+                  isValid = false;
+                  paymentAmountInput.classList.add('is-invalid');
+                } else {
+                  paymentAmountInput.classList.remove('is-invalid');
+                }
+        
+                // If form is valid, submit it
+                if (isValid) {
+                  const formData = new FormData(paymentGatewayForm);
+                  const formObject = {};
+                  formData.forEach((value, key) => formObject[key] = value);
+                  const formJSON = JSON.stringify(formObject);
+        
+                  fetch('/api/customer', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: formJSON
+                  })
+                    .then(response => response.json())
+                    .then(data => {
+                      alert('Form submitted successfully!');
+                      paymentGatewayForm.reset();
+                      policyOutstanding.textContent = '';
+                      document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    })
+                    .catch(() => {
+                      alert('Error submitting form');
+                    });
+                }
+              });
             });
-        </script>
+          </script>
+        
 </body>
 
 </html>
